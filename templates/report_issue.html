@@ -1,0 +1,455 @@
+{% extends "base.html" %}
+
+{% block title %}Report Issue - FixMyHyd{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <h1>Report a Civic Issue</h1>
+        <p>Help make Hyderabad better by reporting issues in your area</p>
+    </div>
+
+    <div id="locationBanner" class="location-banner">
+        <i class="fas fa-map-marker-alt"></i>
+        <span id="locationStatus">Attempting to get your device location...</span>
+    </div>
+
+    <div class="report-form-container">
+        <form id="reportForm" class="report-form" method="POST" action="{{ url_for('report_issue_endpoint') }}" enctype="multipart/form-data">
+            <input type="hidden" id="latitude" name="device_latitude">
+            <input type="hidden" id="longitude" name="device_longitude">
+            
+            <div class="form-section">
+                <h3><i class="fas fa-camera"></i> Photo Evidence</h3>
+                <div class="file-upload-area" id="imageUploadArea">
+                    <input type="file" id="imageInput" name="image" accept="image/*" required>
+                    <div class="upload-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload or drag and drop</p>
+                        <p class="upload-hint">Take a clear photo of the issue</p>
+                    </div>
+                    <div class="image-preview" id="imagePreview" style="display: none;">
+                        <img id="previewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image" onclick="removeImage()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-microphone"></i> Voice Description</h3>
+                <div class="voice-recording">
+                    <div class="voice-controls">
+                        <button type="button" id="recordBtn" class="btn btn-outline">
+                            <i class="fas fa-microphone"></i>
+                            Start Recording
+                        </button>
+                        <button type="button" id="stopBtn" class="btn btn-outline" style="display: none;">
+                            <i class="fas fa-stop"></i>
+                            Stop Recording
+                        </button>
+                        <button type="button" id="playBtn" class="btn btn-outline" style="display: none;">
+                            <i class="fas fa-play"></i>
+                            Play Recording
+                        </button>
+                    </div>
+                    <div class="recording-status" id="recordingStatus"></div>
+                    <input type="file" id="audioInput" name="audio" accept="audio/*" style="display: none;">
+                </div>
+            </div>
+            <!-- OR Separator -->
+            <div class="or-separator">
+                <span>OR</span>
+            </div>
+            <div class="form-section">
+                <h3><i class="fas fa-edit"></i> Text Description</h3>
+                <div class="form-group">
+                    <label for="description">Describe the issue in detail</label>
+                    <textarea id="description" name="description" rows="4" placeholder="Describe the civic issue you've encountered. Be as specific as possible about the location and nature of the problem."></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span>/500 characters
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-map-marker-alt"></i> Location Details</h3>
+                <div class="form-group">
+                    <label for="location_text" id="locationLabel">Full Address or Nearest Landmark (Required if GPS fails)</label>
+                    <input type="text" id="location_text" name="location_text" placeholder="Enter full address or nearest landmark" required>
+                </div>
+                <div class="location-help">
+                    <i class="fas fa-info-circle"></i>
+                    <p id="locationHelpText">Coordinates will be captured automatically. This field is a backup for the address string.</p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="clearForm()">
+                    <i class="fas fa-eraser"></i>
+                    Clear Form
+                </button>
+                <button type="submit" class="btn btn-primary btn-large">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="report-info">
+        <h3>What happens next?</h3>
+        <div class="info-steps">
+            <div class="info-step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    <h4>AI Analysis</h4>
+                    <p>Our AI will analyze your photo and description to categorize the issue and determine priority.</p>
+                </div>
+            </div>
+            <div class="info-step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    <h4>Formal Submission</h4>
+                    <p>We'll automatically submit a formal complaint to the GHMC portal on your behalf.</p>
+                </div>
+            </div>
+            <div class="info-step">
+                <div class="step-number">3</div>
+                <div class="step-content">
+                    <h4>Track Progress</h4>
+                    <p>You'll receive a complaint ID and can track the status in your dashboard.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="loadingModal" class="modal">
+    <div class="modal-content loading-modal">
+        <div class="loading-spinner"></div>
+        <h3>Processing your report...</h3>
+        <p>Our AI is analyzing your submission. This may take a few moments.</p>
+    </div>
+</div>
+
+<style>
+.location-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.location-banner i {
+    font-size: 1.2em;
+}
+
+.location-banner.success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.location-banner.error {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+/* Ensure the required input is visually distinct if GPS fails */
+#location_text:invalid:focus {
+    border-color: red;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let mediaRecorder;
+let audioChunks = [];
+let isRecording = false;
+
+// Global flag to track if location acquisition was successful
+let isLocationSuccessful = false;
+
+// Get user's location on page load
+window.addEventListener('load', function() {
+    getUserLocation();
+});
+
+function getUserLocation() {
+    const banner = document.getElementById('locationBanner');
+    const status = document.getElementById('locationStatus');
+    const helpText = document.getElementById('locationHelpText');
+    const locationInput = document.getElementById('location_text');
+    
+    // Reset status fields
+    locationInput.removeAttribute('disabled');
+    locationInput.setAttribute('required', 'required');
+    locationInput.placeholder = "Enter full address or nearest landmark";
+    banner.className = 'location-banner';
+    status.textContent = 'Attempting to get your device location...';
+    
+    if (!navigator.geolocation) {
+        banner.className = 'location-banner error';
+        status.textContent = 'Geolocation is not supported by your browser.';
+        helpText.textContent = 'Please enter the full address manually above.';
+        isLocationSuccessful = false;
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+
+            // 1. Set hidden form fields
+            document.getElementById('latitude').value = latitude;
+            document.getElementById('longitude').value = longitude;
+            
+            // 2. Update UI for success
+            banner.className = 'location-banner success';
+            status.innerHTML = `<i class="fas fa-check-circle"></i> Location captured! (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            helpText.innerHTML = `<strong>✓ Location coordinates captured automatically.</strong> The address field is optional for context.`;
+            
+            // 3. Set location input as optional (since coordinates are captured)
+            locationInput.placeholder = "Coordinates captured. Address is optional for context.";
+            locationInput.removeAttribute('required');
+            isLocationSuccessful = true;
+            
+            console.log('Location obtained:', {latitude, longitude});
+            
+            // Hide banner after 3 seconds
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 3000);
+        },
+        function(error) {
+            let errorMessage = '';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Location access denied.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Location information unavailable.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Location request timed out.';
+                    break;
+                default:
+                    errorMessage = 'An unknown error occurred.';
+            }
+            
+            // 1. Clear hidden fields
+            document.getElementById('latitude').value = '';
+            document.getElementById('longitude').value = '';
+
+            // 2. Update UI for error
+            banner.className = 'location-banner error';
+            status.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${errorMessage}`;
+            helpText.textContent = 'Device location failed. You MUST enter the full address manually.';
+            
+            // 3. Set location input as mandatory
+            locationInput.setAttribute('required', 'required');
+            isLocationSuccessful = false;
+
+            // Keep error banner visible longer
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 5000);
+            
+            console.error('Geolocation error:', error);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        }
+    );
+}
+
+// Image upload handling (no change)
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('imagePreview');
+            const img = document.getElementById('previewImg');
+            img.src = e.target.result;
+            preview.style.display = 'block';
+            document.querySelector('.upload-content').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function removeImage() {
+    document.getElementById('imageInput').value = '';
+    document.getElementById('imagePreview').style.display = 'none';
+    document.querySelector('.upload-content').style.display = 'block';
+}
+
+// Voice recording (no change)
+document.getElementById('recordBtn').addEventListener('click', startRecording);
+document.getElementById('stopBtn').addEventListener('click', stopRecording);
+document.getElementById('playBtn').addEventListener('click', playRecording);
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = function(event) {
+            audioChunks.push(event.data);
+        };
+        
+        mediaRecorder.onstop = function() {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+            
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(audioFile);
+            document.getElementById('audioInput').files = dataTransfer.files;
+            
+            document.getElementById('recordBtn').style.display = 'none';
+            document.getElementById('stopBtn').style.display = 'none';
+            document.getElementById('playBtn').style.display = 'inline-block';
+            document.getElementById('recordingStatus').textContent = 'Recording saved!';
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        
+        document.getElementById('recordBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'inline-block';
+        document.getElementById('recordingStatus').textContent = 'Recording... Click stop when done.';
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+        alert('Could not access microphone. Please check permissions.');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+    }
+}
+
+function playRecording() {
+    const audioFile = document.getElementById('audioInput').files[0];
+    if (audioFile) {
+        const audio = new Audio(URL.createObjectURL(audioFile));
+        audio.play();
+    }
+}
+
+// Character count (no change)
+document.getElementById('description').addEventListener('input', function() {
+    const count = this.value.length;
+    document.getElementById('charCount').textContent = count;
+    
+    if (count > 500) {
+        this.value = this.value.substring(0, 500);
+        document.getElementById('charCount').textContent = 500;
+    }
+});
+
+
+// Form submission (no change needed here, as validation is handled by the browser/backend)
+document.getElementById('reportForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Basic validation check based on the flag
+    const locationInput = document.getElementById('location_text');
+    if (!isLocationSuccessful && locationInput.value.trim() === '') {
+        alert('Please enter a manual address, as device location acquisition failed.');
+        locationInput.focus();
+        return;
+    }
+
+    // Show loading modal
+    document.getElementById('loadingModal').style.display = 'block';
+    
+    // Create FormData (Hidden fields are collected automatically)
+    const formData = new FormData(this);
+    
+    // Submit form
+    fetch('/api/report-issue', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loadingModal').style.display = 'none';
+        
+        if (data.status === 'success') {
+            alert('Report submitted successfully! Your complaint ID is: ' + data.acknowledgement.ghmc_id);
+            clearForm();
+            window.location.href = '/user/dashboard';
+        } else {
+            // Re-run location check in case of failure
+            getUserLocation(); 
+            alert('Error submitting report: ' + data.error);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loadingModal').style.display = 'none';
+        console.error('Error:', error);
+        getUserLocation(); 
+        alert('Error submitting report. Please try again.');
+    });
+});
+
+function clearForm() {
+    document.getElementById('reportForm').reset();
+    document.getElementById('imagePreview').style.display = 'none';
+    document.querySelector('.upload-content').style.display = 'block';
+    document.getElementById('recordBtn').style.display = 'inline-block';
+    document.getElementById('stopBtn').style.display = 'none';
+    document.getElementById('playBtn').style.display = 'none';
+    document.getElementById('recordingStatus').textContent = '';
+    document.getElementById('charCount').textContent = '0';
+    
+    // Re-get location after clearing to ensure fields are populated for the next submission
+    getUserLocation();
+}
+
+// Drag and drop for image upload (no change)
+const uploadArea = document.getElementById('imageUploadArea');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        const file = files[0];
+        if (file.type.startsWith('image/')) {
+            document.getElementById('imageInput').files = files;
+            const event = new Event('change', { bubbles: true });
+            document.getElementById('imageInput').dispatchEvent(event);
+        } else {
+            alert('Please select an image file.');
+        }
+    }
+});
+</script>
+{% endblock %}

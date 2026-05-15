@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Citizen Dashboard - FixMyHyd{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Welcome back, {{ session.user_name or 'Citizen' }}!</h1>
+        <p>Track your reported issues and submit new ones</p>
+    </div>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon icon-blue"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="stat-content">
+                <div class="stat-number-d">{{ user_stats.total_complaints }}</div>
+                <div class="stat-label-d">Total Reports</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-orange"><i class="fas fa-clock"></i></div>
+            <div class="stat-content">
+                <div class="stat-number-d">{{ user_stats.pending_complaints }}</div>
+                <div class="stat-label-d">Pending</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
+            <div class="stat-content">
+                <div class="stat-number-d">{{ user_stats.resolved_complaints }}</div>
+                <div class="stat-label-d">Resolved</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon icon-purple"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-content">
+                <div class="stat-number-d">{{ user_stats.resolution_rate }}%</div>
+                <div class="stat-label-d">Resolution Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-actions">
+        <a href="{{ url_for('report_issue') }}" class="btn btn-primary btn-large">
+            <i class="fas fa-plus-circle"></i> Report New Issue
+        </a>
+        <button class="btn btn-secondary" onclick="location.reload()">
+            <i class="fas fa-sync-alt"></i> Refresh
+        </button>
+    </div>
+
+    <!-- Telegram bot CTA for portal users -->
+    <div class="telegram-cta" style="background:#e8f4ff;border:1px solid #b3d4f5;border-radius:8px;padding:1rem 1.5rem;margin:1rem 0;display:flex;align-items:center;gap:1rem;">
+        <i class="fab fa-telegram" style="font-size:2rem;color:#0088cc;"></i>
+        <div>
+            <strong>Prefer reporting on the go?</strong><br>
+            <span style="color:#64748b;font-size:0.9rem;">Use our Telegram bot to snap a photo and report instantly — your complaints appear here automatically.</span>
+        </div>
+    </div>
+
+    <div class="complaints-section">
+        <div class="section-header">
+            <h2>Your Recent Reports</h2>
+            <div class="filter-options">
+                <select id="statusFilter" onchange="filterComplaints()">
+                    <option value="">All Status</option>
+                    <option value="Submitted">Submitted</option>
+                    <option value="Acknowledged">Acknowledged</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                    <option value="Closed">Closed</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="complaints-list" id="complaintsList">
+            {% for complaint in user_complaints %}
+            <div class="complaint-card" data-status="{{ complaint.status }}">
+                <div class="complaint-header">
+                    <div class="complaint-id">
+                        <strong><code>{{ complaint.ghmc_id }}</code></strong>
+                        {% if complaint.source == 'telegram' %}
+                            <span class="source-badge source-telegram" style="margin-left:0.5rem;">
+                                <i class="fab fa-telegram"></i> via Bot
+                            </span>
+                        {% else %}
+                            <span class="source-badge source-portal" style="margin-left:0.5rem;">
+                                <i class="fas fa-globe"></i> via Portal
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="complaint-status status-{{ complaint.status.lower().replace(' ', '-') }}">
+                        {{ complaint.status }}
+                    </div>
+                </div>
+                <div class="complaint-content">
+                    <h3>{{ complaint.subject }}</h3>
+                    <p>{{ (complaint.description or '')[:150] }}{% if (complaint.description or '')|length > 150 %}...{% endif %}</p>
+                    <div class="complaint-meta">
+                        <span class="category"><i class="fas fa-tag"></i> {{ complaint.category }}</span>
+                        <span class="priority priority-{{ complaint.priority.lower() }}">
+                            <i class="fas fa-flag"></i> {{ complaint.priority }}
+                        </span>
+                        {% if complaint.zone and complaint.zone != 'Unknown' %}
+                        <span><i class="fas fa-map-marker-alt"></i> {{ complaint.zone }}</span>
+                        {% endif %}
+                        <span class="date">
+                            <i class="fas fa-calendar"></i>
+                            {{ complaint.created_at | format_date }}
+                        </span>
+                    </div>
+                </div>
+                <div class="complaint-actions">
+                    <button class="btn btn-sm btn-outline" onclick="viewComplaint({{ complaint.id }})">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <h3>No reports yet</h3>
+                <p>Start by reporting your first civic issue — use the button above or the Telegram bot!</p>
+                <a href="{{ url_for('report_issue') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Report Issue
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Complaint Details Modal -->
+<div id="complaintModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Complaint Details</h2>
+            <button class="modal-close" onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="complaintDetails"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterComplaints() {
+    const filter = document.getElementById('statusFilter').value;
+    document.querySelectorAll('.complaint-card').forEach(card => {
+        card.style.display = (!filter || card.dataset.status === filter) ? 'block' : 'none';
+    });
+}
+
+function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.appendChild(document.createTextNode(str ?? ''));
+    return d.innerHTML;
+}
+
+function viewComplaint(id) {
+    fetch(`/api/user/complaints/${id}`)
+        .then(r => r.json())
+        .then(data => {
+            const sourceLabel = data.source === 'telegram'
+                ? '<span class="source-badge source-telegram"><i class="fab fa-telegram"></i> Telegram Bot</span>'
+                : '<span class="source-badge source-portal"><i class="fas fa-globe"></i> Web Portal</span>';
+            const locationDisplay = data.gps_lat
+                ? `<a href="https://maps.google.com/?q=${encodeURIComponent(data.gps_lat)},${encodeURIComponent(data.gps_lng)}" target="_blank">📍 View on Google Maps</a>`
+                : escapeHtml(data.location || 'Not specified');
+            const imageHtml = data.image_path
+                ? `<div class="detail-row"><strong>Photo:</strong><span><img src="/static/${escapeHtml(data.image_path)}" style="max-width:100%;max-height:300px;border-radius:8px;margin-top:6px;display:block;"></span></div>`
+                : '';
+            document.getElementById('complaintDetails').innerHTML = `
+                <div class="complaint-detail">
+                    ${imageHtml}
+                    <div class="detail-row"><strong>GHMC ID:</strong><span><code>${escapeHtml(data.ghmc_id)}</code></span></div>
+                    <div class="detail-row"><strong>Source:</strong><span>${sourceLabel}</span></div>
+                    <div class="detail-row"><strong>Status:</strong><span class="status-badge status-${data.status.toLowerCase().replace(' ','-')}">${escapeHtml(data.status)}</span></div>
+                    <div class="detail-row"><strong>Category:</strong><span>${escapeHtml(data.category)}</span></div>
+                    <div class="detail-row"><strong>Priority:</strong><span>${escapeHtml(data.priority)}</span></div>
+                    <div class="detail-row"><strong>Subject:</strong><span>${escapeHtml(data.subject)}</span></div>
+                    <div class="detail-row"><strong>Description:</strong><span>${escapeHtml(data.description)}</span></div>
+                    <div class="detail-row"><strong>Location:</strong><span>${locationDisplay}</span></div>
+                    <div class="detail-row"><strong>Zone:</strong><span>${escapeHtml(data.zone || 'Unknown')}</span></div>
+                    <div class="detail-row"><strong>Submitted:</strong><span>${new Date(data.created_at).toLocaleString()}</span></div>
+                    <div class="detail-row"><strong>Last Updated:</strong><span>${new Date(data.updated_at).toLocaleString()}</span></div>
+                </div>`;
+            document.getElementById('complaintModal').style.display = 'block';
+        });
+}
+
+function closeModal() { document.getElementById('complaintModal').style.display = 'none'; }
+window.onclick = e => { if (e.target === document.getElementById('complaintModal')) closeModal(); };
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Login - FixMyHyd{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card admin-card">
+        <div class="auth-header">
+            <div class="auth-icon admin-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h1>Admin Login</h1>
+            <p>Access the administrative dashboard to manage complaints and track progress</p>
+        </div>
+        
+        <form class="auth-form" method="POST" action="{{ url_for('admin_login') }}">
+            <div class="form-group">
+                <label for="username">Admin Username</label>
+                <div class="input-group">
+                    <i class="fas fa-user-shield"></i>
+                    <input type="text" id="username" name="username" required>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" required>
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="remember">
+                    <span class="checkmark"></span>
+                    Remember me
+                </label>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">
+                <i class="fas fa-sign-in-alt"></i>
+                Admin Sign In
+            </button>
+        </form>
+        
+        <div class="auth-footer">
+            <p><a href="{{ url_for('home') }}">← Back to Home</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
+{% endblock %}
