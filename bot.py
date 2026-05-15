@@ -389,63 +389,110 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> N
 # ==================== MAIN ====================
 
 def main():
+    """Initialize and start the Telegram bot with comprehensive error handling."""
+    
+    # Validate required environment variables
+    print("[BOT] Checking environment variables...")
+    
     if not TOKEN:
+        error_msg = (
+            "\n❌ [FATAL] TELEGRAM_BOT_TOKEN not set in environment!\n"
+            "   On Render Dashboard:\n"
+            "   1. Go to Environment Variables\n"
+            "   2. Add: TELEGRAM_BOT_TOKEN = your_bot_token_here\n"
+            "   3. Deploy again\n"
+        )
+        print(error_msg)
+        logging.error(error_msg)
         raise ValueError("TELEGRAM_BOT_TOKEN not set in environment")
-
-    app = (
-        Application.builder()
-        .token(TOKEN)
-        .connect_timeout(30.0)
-        .read_timeout(30.0)
-        .write_timeout(30.0)
-        .build()
-    )
-
-    report_conv = ConversationHandler(
-        entry_points=[
-            CommandHandler("report", report_start),
-            MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_direct_photo),
-        ],
-        states={
-            WAITING_FOR_PHOTO: [MessageHandler(filters.PHOTO, receive_photo)],
-            WAITING_FOR_DESCRIPTION: [
-                MessageHandler((filters.TEXT | filters.VOICE | filters.AUDIO) & ~filters.COMMAND, receive_description),
-                CommandHandler("skip", skip_description),
-            ],
-            WAITING_FOR_LOCATION: [
-                CallbackQueryHandler(location_callback, pattern="^(use_location|type_address)$"),
-                MessageHandler(filters.LOCATION, receive_location),
-                MessageHandler(filters.TEXT & ~filters.COMMAND, receive_location),
-            ],
-        },
-        fallbacks=[CommandHandler("cancel", cancel)],
-        allow_reentry=True,
-        per_message=False,
-        per_chat=True,
-        per_user=True
-    )
-
-    # Log every incoming message before any handler (group -1)
-    app.add_handler(MessageHandler(filters.ALL, debug_all_messages), group=-1)
-
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("help", help_cmd))
-    app.add_handler(CommandHandler("portal", portal_link))
-    app.add_handler(CommandHandler("mystatus", my_status))
-    app.add_handler(CommandHandler("resetpassword", reset_password))
-    app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
-    app.add_handler(report_conv)
-
-    # Fallback: voice/audio sent outside an active conversation
-    app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, voice_outside_conversation))
-    app.add_error_handler(error_handler)
-
-    print("FixMyHyd bot is running...")
+    
+    if not BACKEND_URL:
+        print("[WARNING] PORTAL_BASE_URL not set, using default: http://localhost:5001")
+    
+    print(f"[BOT] ✅ TOKEN configured")
+    print(f"[BOT] ✅ Backend URL: {BACKEND_URL}")
+    
     try:
+        print("[BOT] Building Telegram application...")
+        app = (
+            Application.builder()
+            .token(TOKEN)
+            .connect_timeout(30.0)
+            .read_timeout(30.0)
+            .write_timeout(30.0)
+            .build()
+        )
+        print("[BOT] ✅ Application builder initialized")
+
+        report_conv = ConversationHandler(
+            entry_points=[
+                CommandHandler("report", report_start),
+                MessageHandler(filters.PHOTO & ~filters.COMMAND, handle_direct_photo),
+            ],
+            states={
+                WAITING_FOR_PHOTO: [MessageHandler(filters.PHOTO, receive_photo)],
+                WAITING_FOR_DESCRIPTION: [
+                    MessageHandler((filters.TEXT | filters.VOICE | filters.AUDIO) & ~filters.COMMAND, receive_description),
+                    CommandHandler("skip", skip_description),
+                ],
+                WAITING_FOR_LOCATION: [
+                    CallbackQueryHandler(location_callback, pattern="^(use_location|type_address)$"),
+                    MessageHandler(filters.LOCATION, receive_location),
+                    MessageHandler(filters.TEXT & ~filters.COMMAND, receive_location),
+                ],
+            },
+            fallbacks=[CommandHandler("cancel", cancel)],
+            allow_reentry=True,
+            per_message=False,
+            per_chat=True,
+            per_user=True
+        )
+
+        # Log every incoming message before any handler (group -1)
+        app.add_handler(MessageHandler(filters.ALL, debug_all_messages), group=-1)
+
+        app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("help", help_cmd))
+        app.add_handler(CommandHandler("portal", portal_link))
+        app.add_handler(CommandHandler("mystatus", my_status))
+        app.add_handler(CommandHandler("resetpassword", reset_password))
+        app.add_handler(MessageHandler(filters.CONTACT, handle_contact))
+        app.add_handler(report_conv)
+
+        # Fallback: voice/audio sent outside an active conversation
+        app.add_handler(MessageHandler(filters.VOICE | filters.AUDIO, voice_outside_conversation))
+        app.add_error_handler(error_handler)
+        
+        print("[BOT] ✅ All handlers registered")
+        print("\n" + "="*60)
+        print("🤖 FixMyHyd Telegram Bot is NOW RUNNING")
+        print("="*60)
+        print("✅ Bot is listening for incoming messages...\n")
+        
         app.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
-    except telegram.error.Conflict:
-        print("\n[ERROR] Telegram Conflict: Another instance of this bot is already running (e.g., deployed on a server).")
-        print("Please stop the other instance or use a different test token for local development.\n")
+        
+    except telegram.error.Conflict as e:
+        error_msg = (
+            "\n❌ [ERROR] Telegram Conflict detected!\n"
+            "   This means another instance of this bot is already running.\n"
+            "   On Render:\n"
+            "   - Check if you have multiple worker processes enabled\n"
+            "   - Restart the service\n"
+            "   - Or create a new service with a different bot token\n"
+        )
+        print(error_msg)
+        logging.error(error_msg)
+        
+    except Exception as e:
+        error_msg = f"\n❌ [ERROR] Bot startup failed: {str(e)}\n"
+        print(error_msg)
+        logging.error(error_msg, exc_info=True)
+        raise
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"\n[FATAL] Bot process terminated: {e}")
+        logging.error(f"Bot process terminated: {e}", exc_info=True)
+        exit(1)
