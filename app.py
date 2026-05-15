@@ -449,8 +449,9 @@ def home():
     users = conn.execute('SELECT COUNT(*) FROM users').fetchone()[0]
     resolution_rate = round((resolved / total * 100) if total > 0 else 0)
     try:
+        # PostgreSQL-compatible query: extract days from interval
         avg_result = conn.execute(
-            "SELECT AVG(CAST((julianday(updated_at) - julianday(created_at)) AS REAL)) FROM complaints WHERE status = 'Resolved'"
+            "SELECT AVG(EXTRACT(DAY FROM (updated_at - created_at))) FROM complaints WHERE status = 'Resolved'"
         ).fetchone()[0]
         avg_days = round(avg_result) if avg_result else 0
     except Exception:
