@@ -14,6 +14,8 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 from geopy.geocoders import Nominatim
 from geopy.exc import GeocoderUnavailable
+import cloudinary
+import cloudinary.uploader
 
 # Werkzeug compatibility shim for 'partitioned' kwarg in older versions
 try:
@@ -46,6 +48,35 @@ COMPLAINT_CATEGORIES = [
 ]
 
 PORTAL_BASE_URL = os.getenv('PORTAL_BASE_URL', 'http://localhost:5001')
+
+# ==================== CLOUDINARY CONFIGURATION ====================
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')
+)
+
+def upload_image_to_cloudinary(image_bytes, ghmc_id):
+    """Upload image to Cloudinary and return the URL."""
+    try:
+        safe_id = ghmc_id.replace('/', '_')
+        upload_response = cloudinary.uploader.upload(
+            image_bytes,
+            public_id=f"fixmyhyd/{safe_id}",
+            folder="fixmyhyd_complaints",
+            resource_type="auto",
+            format="jpg"
+        )
+        return upload_response.get('secure_url', upload_response.get('url'))
+    except Exception as e:
+        print(f"[CLOUDINARY] Upload failed: {e}")
+        # Fallback to local storage if Cloudinary fails
+        uploads_dir = os.path.join('static', 'uploads')
+        os.makedirs(uploads_dir, exist_ok=True)
+        image_filename = f"{safe_id}.jpg"
+        with open(os.path.join(uploads_dir, image_filename), 'wb') as f:
+            f.write(image_bytes)
+        return f"uploads/{image_filename}"
 
 # ==================== 2. DATABASE ====================
 
@@ -818,14 +849,8 @@ def _process_complaint_submission(image_file, audio_file, text_description,
     final_priority = text_analysis.get("priority", "Medium")
     ghmc_id = f"GHMC/HYD/{int(datetime.now().timestamp())}"
 
-    # --- Save Image ---
-    uploads_dir = os.path.join('static', 'uploads')
-    os.makedirs(uploads_dir, exist_ok=True)
-    safe_id = ghmc_id.replace('/', '_')
-    image_filename = f"{safe_id}.jpg"
-    with open(os.path.join(uploads_dir, image_filename), 'wb') as f:
-        f.write(image_bytes)
-    image_path = f"uploads/{image_filename}"
+    # --- Upload Image to Cloudinary ---
+    image_path = upload_image_to_cloudinary(image_bytes, ghmc_id)
 
     conn = get_db_connection()
     try:

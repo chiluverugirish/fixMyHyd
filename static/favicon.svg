@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="100%" height="100%">
+  <defs>
+    <!-- Vibrant civic-tech gradient background -->
+    <linearGradient id="hydGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ea5e9" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    
+    <!-- Smooth shadow for depth at small sizes -->
+    <filter id="dropShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#0f172a" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Background Base (Optional for standard icons, excellent for app icons) -->
+  <rect width="32" height="32" rx="7" fill="url(#hydGrad)" />
+
+  <!-- Main Pin / Wrench Hybrid Concept Group -->
+  <g filter="url(#dropShadow)" transform="translate(0, -0.5)">
+    <!-- Outer Location Pin Shape -->
+    <path d="M16,4 C11,4 7,8 7,13 C7,19.5 16,27 16,27 C16,27 25,19.5 25,13 C25,8 21,4 16,4 Z" fill="#ffffff" />
+    
+    <!-- Inner Dynamic "Fixing/Tools" Cutout (Wrench jaw facing up/right) -->
+    <path d="M16,9 C13.8,9 12,10.8 12,13 C12,14.7 13,16.1 14.5,16.7 L14.5,21.5 C14.5,22.3 15.2,23 16,23 C16.8,23 17.5,22.3 17.5,21.5 L17.5,16.7 C19,16.1 20,14.7 20,13 C20,12 19.5,11.1 18.8,10.4 L16.8,12.4 C16.6,12.6 16.3,12.7 16,12.7 C15.4,12.7 15,12.3 15,11.7 C15,11.4 15.1,11.1 15.3,10.9 L17.3,8.9 C16.9,9 16.4,9 16,9 Z" fill="#2563eb" />
+  </g>
+
+  <!-- AI Sparkle / Magic Accent (Representing Gemini processing) -->
+  <!-- Top Right Placement for High Visibility -->
+  <path d="M24,4 C24,6 25,7 27,7 C25,7 24,8 24,10 C24,8 23,7 21,7 C23,7 24,6 24,4 Z" fill="#38bdf8" />
+</svg>
