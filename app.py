@@ -315,14 +315,21 @@ Data:
 # ==================== 4. GEOCODING ====================
 
 def reverse_geocode(lat, lng):
+    """Reverse geocode GPS coordinates to address. Falls back to coordinates if service unavailable."""
     if lat is None or lng is None:
         return "Location not available"
     try:
-        geolocator = Nominatim(user_agent="fixmyhyd_app")
-        location = geolocator.reverse((lat, lng), exactly_one=True, timeout=10)
+        geolocator = Nominatim(user_agent="fixmyhyd_app", timeout=5)
+        location = geolocator.reverse((lat, lng), exactly_one=True, timeout=5)
         return location.address if location else f"({lat:.4f}, {lng:.4f})"
+    except GeocoderUnavailable as e:
+        # Service unavailable or coordinates not supported - use coordinates as fallback
+        print(f"[GEOLOCATION] Service unavailable ({str(e)}), using coordinates: {lat}, {lng}")
+        return f"GPS: {lat:.4f}, {lng:.4f}"
     except Exception as e:
-        return f"({lat:.4f}, {lng:.4f})"
+        # Any other error - use coordinates as fallback
+        print(f"[GEOLOCATION] Error: {str(e)}, using coordinates fallback")
+        return f"GPS: {lat:.4f}, {lng:.4f}"
 
 # ==================== 5. AUTH HELPERS ====================
 
