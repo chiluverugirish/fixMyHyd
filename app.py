@@ -97,9 +97,36 @@ def get_db():
     conn.row_factory = sqlite3.Row
     return conn, False
 
+class DBConnection:
+    """Wrapper for both SQLite and PostgreSQL connections."""
+    def __init__(self, conn, is_postgres):
+        self._conn = conn
+        self._is_postgres = is_postgres
+    
+    def execute(self, query, params=()):
+        """Execute query - returns wrapper that supports fetchone/fetchall."""
+        if self._is_postgres:
+            cursor = self._conn.cursor()
+            cursor.execute(query, params)
+            return cursor
+        else:
+            return self._conn.execute(query, params)
+    
+    def commit(self):
+        """Commit transaction."""
+        self._conn.commit()
+    
+    def close(self):
+        """Close connection."""
+        self._conn.close()
+    
+    def cursor(self):
+        """Get a cursor for advanced operations."""
+        return self._conn.cursor()
+
 def get_db_connection():
-    conn, _ = get_db()
-    return conn
+    conn, pg = get_db()
+    return DBConnection(conn, pg)
 
 def is_postgres():
     conn, pg = get_db()
