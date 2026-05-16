@@ -256,18 +256,92 @@ function initTableFiltering() {
 
 // Loading states
 function showLoading(element) {
+    if (!element) return;
     const originalContent = element.innerHTML;
     element.dataset.originalContent = originalContent;
-    element.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+    element.classList.add('is-loading');
+    element.innerHTML = '<span class="spinner-border spinner-border-sm" aria-hidden="true"></span> <span>Processing...</span>';
     element.disabled = true;
 }
 
 function hideLoading(element) {
+    if (!element) return;
     if (element.dataset.originalContent) {
         element.innerHTML = element.dataset.originalContent;
         element.disabled = false;
+        element.classList.remove('is-loading');
         delete element.dataset.originalContent;
     }
+}
+
+function setGlobalLoading(isLoading, showOverlay = false) {
+    const bar = document.getElementById('appLoadingBar');
+    const overlay = document.getElementById('appLoadingOverlay');
+
+    if (!bar || !overlay) return;
+
+    if (isLoading) {
+        bar.classList.remove('done');
+        bar.classList.add('active');
+        if (showOverlay) {
+            overlay.classList.add('active');
+            document.body.classList.add('loading-active');
+        }
+        return;
+    }
+
+    bar.classList.remove('active');
+    bar.classList.add('done');
+    overlay.classList.remove('active');
+    document.body.classList.remove('loading-active');
+    setTimeout(() => {
+        bar.classList.remove('done');
+    }, 240);
+}
+
+function initGlobalLoadingUX() {
+    const reportForm = document.getElementById('reportForm');
+
+    // Navigation progress for full page transitions.
+    document.querySelectorAll('a[href]').forEach(link => {
+        link.addEventListener('click', function() {
+            const href = this.getAttribute('href') || '';
+            const target = this.getAttribute('target');
+            const isAnchor = href.startsWith('#');
+            const isJs = href.toLowerCase().startsWith('javascript:');
+            const isExternal = this.origin && this.origin !== window.location.origin;
+
+            if (isAnchor || isJs || target === '_blank') return;
+            setGlobalLoading(true, false);
+
+            if (isExternal) {
+                setTimeout(() => setGlobalLoading(false, false), 1200);
+            }
+        });
+    });
+
+    // Form submit loading for all forms except report page, which uses its own detailed modal.
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            if (!this.checkValidity()) return;
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                showLoading(submitBtn);
+            }
+
+            if (form === reportForm) {
+                setGlobalLoading(true, false);
+                return;
+            }
+
+            setGlobalLoading(true, true);
+        });
+    });
+
+    window.addEventListener('pageshow', () => setGlobalLoading(false, false));
+    window.addEventListener('load', () => setGlobalLoading(false, false));
+    window.addEventListener('beforeunload', () => setGlobalLoading(true, false));
 }
 
 // AJAX form submission
@@ -401,6 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initSearch();
     initSmoothScrolling();
     initFlashMessages();
+    initGlobalLoadingUX();
     
     const forms = document.querySelectorAll('form:not([data-ajax])');
     forms.forEach(form => {
