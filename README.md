@@ -26,42 +26,45 @@ A civic issue reporting platform for Hyderabad combining a **Telegram bot** for 
 
 ## Architecture
 
+```text
+┌──────────────────────────────────────────────────────────────┐
+│                         Citizens                             │
+│                                                              │
+│   📱 Telegram Bot              🌐 Web Portal                │
+│   (quick reporting)            (dashboard & tracking)        │
+└──────────────┬───────────────────────────┬───────────────────┘
+               │ HTTP / Media Upload       │ HTTP
+               ▼                           ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Flask Backend (app.py)                      │
+│                                                              │
+│  /api/bot/*          ← Telegram bot endpoints                │
+│  /api/report-issue   ← Web portal endpoint                   │
+│                                                              │
+│  Shared Complaint Processing Pipeline                        │
+│                                                              │
+│  ┌──────────────────────────────────────────────────────┐    │
+│  │                AI Processing Layer                   │    │
+│  │                                                      │    │
+│  │  1. CLIP → Image Classification                      │    │
+│  │  2. Whisper Tiny → Speech Transcription              │    │
+│  │  3. TinyLlama → Formal Complaint Generation          │    │
+│  │                                                      │    │
+│  │  All inference served using Groq API                 │    │
+│  └──────────────────────────────────────────────────────┘    │
+│                                                              │
+│   PostgreSQL (production) / SQLite (development)             │
+└──────────────────────────────────────────────────────────────┘
+               │
+               ▼
+┌──────────────────────────────────────────────────────────────┐
+│                  Municipal Dashboard                         │
+│                                                              │
+│  Filters: Status | Category | Priority | Zone | Source      │
+│                                                              │
+│  Actions: View | Update Status | Export Reports              │
+└──────────────────────────────────────────────────────────────┘
 ```
-┌─────────────────────────────────────────────────────┐
-│                   Citizens                          │
-│                                                     │
-│   📱 Telegram Bot          🌐 Web Portal           │
-│   (quick reporting)        (full dashboard)         │
-└──────────┬──────────────────────┬───────────────────┘
-           │ HTTP POST            │ HTTP
-           ▼                      ▼
-┌──────────────────────────────────────────────────────┐
-│              Flask Backend (app.py)                  │
-│                                                      │
-│  /api/bot/*   ←── Bot endpoints                      │
-│  /api/report-issue ←── Portal endpoint               │
-│                                                      │
-│  _process_complaint_submission() ←── shared pipeline │
-│                                                      │
-│  ┌─────────────────────────────────────────────┐     │
-│  │           Gemini AI Pipeline                │     │
-│  │  1. analyze_image_with_gemini()             │     │
-│  │  2. transcribe_audio_with_gemini()          │     │
-│  │  3. analyze_text_with_gemini()              │     │
-│  │  4. generate_formal_report_with_gemini()    │     │
-│  └─────────────────────────────────────────────┘     │
-│                                                      │
-│  SQLite (dev) / PostgreSQL (prod)                    │
-└──────────────────────────────────────────────────────┘
-           │
-           ▼
-┌──────────────────────────────────────────────────────┐
-│              Municipal Dashboard                     │
-│  Filters: Status | Category | Priority | Zone |Source│
-│  Actions: View details | Update status | Export CSV  │
-└──────────────────────────────────────────────────────┘
-```
-
 ## User Account Linking
 
 Telegram users get a portal account **automatically** on first bot interaction (`/start`). Their `telegram_id` is stored in the `users` table. All complaints submitted via the bot are visible in the portal under the same account.
@@ -184,19 +187,21 @@ PORTAL_BASE_URL=https://your-app.onrender.com
 - Default admin: `admin` / `admin123`
 
 **👉 For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
-
 ## Tech Stack
 
-| Component         | Technology                       | Purpose                  |
-| ----------------- | -------------------------------- | ------------------------ |
-| **Frontend**      | HTML5, CSS3, JavaScript          | Web UI                   |
-| **Backend**       | Flask 2.3, Python 3.11           | REST API                 |
-| **Database**      | SQLite (dev) / PostgreSQL (prod) | Data storage             |
-| **Image Storage** | Cloudinary                       | Cloud CDN                |
-| **AI/ML**         | Google Gemini                    | Analysis & transcription |
-| **Bot**           | Telegram Bot API                 | Chat interface           |
-| **Hosting**       | Render                           | Production deployment    |
-
+| Component         | Technology                         | Purpose                              |
+| ----------------- | ---------------------------------- | ------------------------------------ |
+| Frontend          | HTML5, CSS3, JavaScript            | Web portal UI                        |
+| Backend           | Flask 2.3, Python 3.11             | REST APIs & business logic           |
+| Database          | PostgreSQL / SQLite                | Complaint & user storage             |
+| Image Storage     | Cloudinary                         | Media hosting & CDN                  |
+| Telegram Bot      | Telegram Bot API                   | Citizen interaction                  |
+| Image AI          | CLIP (clip-vit-base-patch32)       | Zero-shot issue classification       |
+| Speech AI         | Whisper Tiny                       | Voice transcription                  |
+| LLM               | TinyLlama 1.1B Chat                | Formal complaint generation          |
+| AI Inference      | Groq API                           | Fast model inference                 |
+| Hosting           | Render                             | Flask web service hosting            |
+| Bot Deployment    | AWS EC2 t3.micro                   | Telegram bot deployment              |
 ## Features
 
 ### ✨ Telegram Bot
@@ -400,9 +405,35 @@ We welcome contributions! Please:
 3. Test your changes locally
 4. Submit a pull request
 
-## License
+### 🤖 AI Pipeline
 
-[Specify your license - MIT, GPL, etc.]
+#### CLIP (clip-vit-base-patch32)
+
+- Zero-shot image classifier from OpenAI
+- Classifies civic issue images without labelled training data
+- Embeds both image and candidate labels into shared vector space
+- Uses cosine similarity to determine closest complaint category
+- Categories include potholes, garbage dumps, broken streetlights, etc.
+
+#### Whisper Tiny
+
+- Lightweight speech recognition transformer
+- Processes Telegram `.ogg` voice messages
+- Converts multilingual voice complaints into plain text
+- Supports Telugu, Hyderabadi Hindi, and English input
+
+#### TinyLlama 1.1B Chat
+
+- Lightweight language model for structured complaint generation
+- Receives CLIP classification or Whisper transcription
+- Generates concise GHMC-style formal complaint summaries
+- Stores AI-generated summaries in the complaint database
+
+#### Groq API
+
+- Provides ultra-fast inference serving for all AI models
+- Reduces response latency for real-time complaint processing
+- Handles model execution efficiently for production workloads
 
 ## Acknowledgments
 
