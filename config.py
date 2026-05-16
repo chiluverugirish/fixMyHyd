@@ -9,12 +9,20 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+
+def get_portal_base_url():
+    return (
+        os.getenv('PORTAL_BASE_URL')
+        or os.getenv('RENDER_EXTERNAL_URL')
+        or 'http://localhost:5001'
+    )
+
 class Config:
     """Base configuration."""
     FLASK_ENV = os.getenv('FLASK_ENV', 'development')
     DEBUG = FLASK_ENV == 'development'
     SECRET_KEY = os.getenv('SECRET_KEY', 'dev-key-change-in-production')
-    PORTAL_BASE_URL = os.getenv('PORTAL_BASE_URL', 'http://localhost:5001')
+    PORTAL_BASE_URL = get_portal_base_url()
     PORT = int(os.getenv('PORT', 5001))
     
     # Database

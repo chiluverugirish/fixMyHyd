@@ -25,8 +25,10 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="telegram.ext")
 load_dotenv()
 
+from config import get_portal_base_url
+
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-BACKEND_URL = os.getenv("PORTAL_BASE_URL", "http://localhost:5001")
+BACKEND_URL = get_portal_base_url()
 
 # Conversation states
 WAITING_FOR_PHOTO, WAITING_FOR_DESCRIPTION, WAITING_FOR_LOCATION = range(3)

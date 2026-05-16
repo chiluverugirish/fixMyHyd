@@ -16,6 +16,8 @@ from google.genai import types as genai_types
 import cloudinary.uploader
 import requests
 
+from config import get_portal_base_url
+
 from .constants import COMPLAINT_CATEGORIES
 from .db import get_db
 
@@ -25,7 +27,7 @@ _executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="api_worker")
 GEMINI_TIMEOUT = int(os.getenv("GEMINI_TIMEOUT", 25))
 CLOUDINARY_TIMEOUT = int(os.getenv("CLOUDINARY_TIMEOUT", 30))
 GEOCODE_TIMEOUT = int(os.getenv("GEOCODE_TIMEOUT", 8))
-PORTAL_BASE_URL = os.getenv("PORTAL_BASE_URL", "http://localhost:5001")
+PORTAL_BASE_URL = get_portal_base_url()
 GROQ_TIMEOUT = int(os.getenv("GROQ_TIMEOUT", 25))
 GROQ_BASE_URL = os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
 GROQ_TEXT_MODEL = os.getenv("GROQ_TEXT_MODEL", "llama-3.1-8b-instant")
