@@ -1,0 +1,7 @@
+# Minimal dependencies for FixMyHyd Telegram Bot (EC2 deployment)
+# This excludes Flask, Cloudinary, and AI packages that are only needed for the portal
+
+python-dotenv==1.0.0
+python-telegram-bot>=21.0
+requests==2.31.0
+

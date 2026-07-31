@@ -16,18 +16,22 @@ __pycache__/
 *.db
 *.sqlite3
 fixmyhyd.db
-
+__pycache__/.
 # Uploads directory (Ignore all files inside, but keep the directory)
 static/uploads/*
 !static/uploads/.gitkeep
-
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+.terraform.tfstate.lock.info
 # IDEs and Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 keys/
-
+.env.*
 # OS generated files
 .DS_Store
 Thumbs.db
@@ -37,3 +41,5 @@ CHECKLIST.md
 STRUCTURE.md
 UPDATES.md
 *.md
+deploy.sh
+setup_server.sh

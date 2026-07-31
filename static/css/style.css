@@ -3,9 +3,9 @@
 
 /* ==================== COLOR PALETTE ==================== */
 :root {
-    --primary: #001b94;
-    --primary-light: #667eea;
-    --secondary: #764ba2;
+    --primary: #0d9488;
+    --primary-light: #0ea5e9;
+    --secondary: #2563eb;
     --success: #10b981;
     --warning: #f59e0b;
     --danger: #dc2626;
@@ -82,7 +82,7 @@ a:hover {
 
 /* Gradient Text */
 .gradient-text {
-    background: linear-gradient(135deg, #001b94 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -114,7 +114,7 @@ a:hover {
 
 .btn:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
 }
 
 .btn:active:not(:disabled) {
@@ -122,14 +122,14 @@ a:hover {
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #001b94 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
 }
 
 .btn-secondary {
@@ -246,7 +246,7 @@ a:hover {
 }
 
 .nav-brand span {
-    background: linear-gradient(135deg, #001b94 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -258,7 +258,7 @@ a:hover {
 
 .nav-brand:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
     border-radius: 0.75rem;
 }
 
@@ -294,18 +294,18 @@ a:hover {
 .nav-link:hover {
     color: var(--primary-light);
     background: var(--light);
-    border-color: rgba(102, 126, 234, 0.15);
+    border-color: rgba(13, 148, 136, 0.15);
 }
 
 .nav-link:focus-visible {
     outline: none;
-    border-color: rgba(102, 126, 234, 0.4);
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    border-color: rgba(13, 148, 136, 0.4);
+    box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.2);
 }
 
 /* ==================== HERO SECTION ==================== */
 .hero-section {
-    background: linear-gradient(135deg, #001b94 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     color: white;
     padding: 4rem 0;
     min-height: 80vh;
@@ -557,7 +557,7 @@ a:hover {
 .feature-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #001b94 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -565,7 +565,7 @@ a:hover {
     margin: 0 auto 1.5rem;
     color: white;
     font-size: 2rem;
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
     transition: transform 0.3s ease;
 }
 
@@ -684,7 +684,7 @@ a:hover {
 .auth-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -692,7 +692,7 @@ a:hover {
     margin: 0 auto 1rem;
     color: white;
     font-size: 2rem;
-    box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2);
 }
 
 .auth-icon.admin-icon {
@@ -748,13 +748,13 @@ a:hover {
 .form-group textarea:focus {
     outline: none;
     border-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 
 .form-group input:hover,
 .form-group select:hover,
 .form-group textarea:hover {
-    border-color: rgba(102, 126, 234, 0.4);
+    border-color: rgba(13, 148, 136, 0.4);
 }
 
 .form-group input:disabled,
@@ -903,7 +903,7 @@ a:hover {
 .icon-orange { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
 .icon-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
 .icon-purple { background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); }
-.icon-default { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.icon-default { background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%); }
 
 .stat-content {
     flex: 1;
@@ -963,7 +963,7 @@ a:hover {
 .filter-options select:focus {
     outline: none;
     border-color: var(--primary-light);
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 
 /* ==================== COMPLAINTS LIST ==================== */
@@ -1219,7 +1219,7 @@ a:hover {
 .step-number {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
     color: white;
     border-radius: 50%;
     display: flex;
