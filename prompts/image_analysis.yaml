@@ -1,0 +1,25 @@
+# Image Analysis Prompt Template
+prompt: |
+  Analyze this image of a civic issue in Hyderabad, India.
+  Return ONLY a valid JSON object with:
+  1. "summary": one-sentence description of the scene
+  2. "category": one of {{categories}}
+  
+  Focus on identifying the type of civic issue (pothole, garbage, damaged infrastructure, etc.)
+  and provide a brief but accurate summary.
+
+variables:
+  categories:
+    - "Open Garbage Dump"
+    - "Sewage Leak/Overflow"
+    - "Pothole/Damaged Road"
+    - "Damaged Electrical Infrastructure"
+    - "Fallen Tree"
+    - "Water Logging"
+    - "Stray Animals"
+    - "Other"
+
+metadata:
+  version: "1.0"
+  created: "2026-07-31"
+  purpose: "Civic complaint image classification"

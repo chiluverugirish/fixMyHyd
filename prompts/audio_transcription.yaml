@@ -1,0 +1,16 @@
+# Audio Transcription Prompt Template
+prompt: |
+  Transcribe the following audio clip accurately.
+  The audio contains a voice description of a civic issue in Hyderabad.
+  
+  Provide the full transcription in {{language}}.
+  If there are multiple speakers, indicate speaker changes.
+  Include any relevant details about the civic issue being described.
+
+variables:
+  language: "English"
+  
+metadata:
+  version: "1.0"
+  created: "2026-07-31"
+  purpose: "Voice-to-text transcription for civic complaints"

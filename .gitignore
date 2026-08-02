@@ -13,6 +13,7 @@ __pycache__/
 *$py.class
 
 # Local Database files
+node_modules/
 *.db
 *.sqlite3
 fixmyhyd.db
@@ -43,3 +44,4 @@ UPDATES.md
 *.md
 deploy.sh
 setup_server.sh
+node_modules

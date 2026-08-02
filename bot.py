@@ -1,6 +1,6 @@
 """
 FixMyHyd Telegram Bot
-Reports go through the Flask backend — same pipeline as the portal.
+Reports go through the FastAPI backend — same pipeline as the portal.
 Auto-creates a portal account for every new Telegram user (linked by telegram_id).
 """
 
@@ -38,7 +38,7 @@ WAITING_FOR_PHOTO, WAITING_FOR_DESCRIPTION, WAITING_FOR_LOCATION = range(3)
 def register_user(user):
     """Auto-create or fetch portal account linked to Telegram."""
     try:
-        resp = requests.post(f"{BACKEND_URL}/api/bot/register-user", json={
+        resp = requests.post(f"{BACKEND_URL}/api/v1/bot/register-user", json={
             "telegram_id": str(user.id),
             "name": f"{user.first_name or ''} {user.last_name or ''}".strip(),
             "username": user.username or "",
@@ -64,7 +64,7 @@ def submit_complaint(telegram_id, image_bytes, description, gps_lat=None, gps_ln
         if location_text:
             data["location_text"] = location_text
         resp = requests.post(
-            f"{BACKEND_URL}/api/bot/submit-complaint",
+            f"{BACKEND_URL}/api/v1/bot/submit-complaint",
             files=files,
             data=data,
             timeout=60
@@ -78,7 +78,7 @@ def submit_complaint(telegram_id, image_bytes, description, gps_lat=None, gps_ln
 
 def get_user_complaints(telegram_id):
     try:
-        resp = requests.get(f"{BACKEND_URL}/api/bot/user-complaints/{telegram_id}", timeout=10)
+        resp = requests.get(f"{BACKEND_URL}/api/v1/bot/user-complaints/{telegram_id}", timeout=10)
         return resp.json() if resp.status_code == 200 else []
     except Exception:
         return []
@@ -125,7 +125,7 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE):
             phone = phone_digits
         
     try:
-        resp = requests.post(f"{BACKEND_URL}/api/bot/register-user", json={
+        resp = requests.post(f"{BACKEND_URL}/api/v1/bot/register-user", json={
             "telegram_id": str(user.id),
             "name": f"{user.first_name or ''} {user.last_name or ''}".strip(),
             "username": user.username or "",
@@ -196,7 +196,7 @@ async def reset_password(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await update.effective_message.reply_text("⏳ *Generating new password...*", parse_mode="Markdown")
     try:
-        resp = await asyncio.to_thread(requests.post, f"{BACKEND_URL}/api/bot/reset-password", json={
+        resp = await asyncio.to_thread(requests.post, f"{BACKEND_URL}/api/v1/bot/reset-password", json={
             "telegram_id": str(user.id)
         }, timeout=10)
         

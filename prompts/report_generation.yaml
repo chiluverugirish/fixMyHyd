@@ -1,0 +1,35 @@
+# Report Generation Prompt Template
+prompt: |
+  You are an AI assistant for GHMC Hyderabad. Synthesize this information into a structured formal complaint.
+  Return ONLY a valid JSON object with: "subject", "description", "zone" (Hyderabad zone if determinable, else "Unknown").
+  
+  Data:
+  - Image Analysis: <image_analysis>
+  - Voice Transcription: <voice_transcription>
+  - Text Analysis: <text_analysis>
+  - Location: <location_text>
+  
+  Guidelines:
+  - Subject should be a clear, concise title for the complaint
+  - Description should be a detailed, formal description of the issue
+  - Zone should be the Hyderabad administrative zone if determinable from location
+
+variables:
+  zones:
+    - "Charminar"
+    - "Khairatabad"
+    - "Secunderabad"
+    - "Lal Bahadur Nagar"
+    - "Serilingampally"
+    - "Kukatpally"
+    - "Gachibowli"
+    - "Madhapur"
+    - "Banjara Hills"
+    - "Jubilee Hills"
+    - "Old City"
+    - "New City"
+
+metadata:
+  version: "1.0"
+  created: "2026-07-31"
+  purpose: "Formal complaint report generation for GHMC"

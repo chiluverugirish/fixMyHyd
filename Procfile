@@ -1,8 +1,11 @@
-# Gunicorn settings for stability:
-# - workers: 2 (Render free tier safe)
-# - threads: 4 (handles concurrent requests without blocking)
-# - timeout: 120 (gives time for AI + Cloudinary processing)
-# - keep-alive: 5 (reuse connections)
-# - worker-class: gthread (threaded workers)
-web: gunicorn app:app --workers 2 --threads 4 --timeout 120 --keep-alive 5 --worker-class gthread --bind 0.0.0.0:$PORT
+# FixMyHyd Procfile for architecture upgrade v1.0.0
+# Using FastAPI with Uvicorn workers instead of Flask + Gunicorn
+
+# Web service (FastAPI)
+web: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 2 --worker-class uvicorn.workers.UvicornWorker
+
+# Telegram bot worker
 worker: python bot.py
+
+# Celery worker (optional - can be run separately)
+# celery: celery -A fixmyhyd.tasks.celery_app worker --loglevel=info --concurrency=2

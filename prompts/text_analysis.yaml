@@ -1,0 +1,36 @@
+# Text Analysis Prompt Template
+prompt: |
+  Analyze this civic complaint from Hyderabad. Return ONLY a valid JSON object with:
+  1. "category": one of Open Garbage Dump, Sewage Leak/Overflow, Pothole/Damaged Road, Damaged Electrical Infrastructure, Fallen Tree, Water Logging, Stray Animals, Other
+  2. "priority": "Low", "Medium", or "High"
+  3. "summary": one-sentence summary
+  4. "actionable_steps": list of 2-3 brief steps
+  
+  Complaint: "<complaint_text>"
+  
+  Guidelines:
+  - Category should match the type of civic issue
+  - Priority should be based on urgency and safety impact
+  - Summary should be concise but informative
+  - Actionable steps should be practical for GHMC authorities
+
+variables:
+  categories:
+    - "Open Garbage Dump"
+    - "Sewage Leak/Overflow"
+    - "Pothole/Damaged Road"
+    - "Damaged Electrical Infrastructure"
+    - "Fallen Tree"
+    - "Water Logging"
+    - "Stray Animals"
+    - "Other"
+  priorities:
+    - "Low"
+    - "Medium"
+    - "High"
+    - "Critical"
+
+metadata:
+  version: "1.0"
+  created: "2026-07-31"
+  purpose: "Civic complaint text classification and prioritization"
